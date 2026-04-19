@@ -1,3 +1,4 @@
+import { getDownloadUrl } from "@vercel/blob";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest): Promise<Response> {
@@ -8,45 +9,21 @@ export async function GET(request: NextRequest): Promise<Response> {
     return new Response("Missing url parameter", { status: 400 });
   }
 
-  // Only allow proxying Vercel Blob URLs
   if (!url.includes("vercel-storage.com")) {
     return new Response("Invalid URL", { status: 400 });
   }
 
   const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    return new Response("Storage not configured", { status: 500 });
+  }
 
   try {
-    // Try with Authorization header first
-    const res = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    // Generate a short-lived signed download URL and redirect to it
+    const downloadUrl = await getDownloadUrl(url, { token });
 
-    if (!res.ok) {
-      // Try with token as query param
-      const urlWithToken = token ? `${url}${url.includes("?") ? "&" : "?"}token=${token}` : url;
-      const res2 = await fetch(urlWithToken);
-
-      if (!res2.ok) {
-        return new Response(`Image not found (${res2.status})`, { status: 404 });
-      }
-
-      const contentType = res2.headers.get("content-type") ?? "image/jpeg";
-      return new Response(res2.body, {
-        headers: {
-          "Content-Type": contentType,
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
-      });
-    }
-
-    const contentType = res.headers.get("content-type") ?? "image/jpeg";
-    return new Response(res.body, {
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
+    return Response.redirect(downloadUrl, 302);
   } catch (err: any) {
-    return new Response(`Failed to fetch image: ${err?.message}`, { status: 502 });
+    return new Response(`Image error: ${err?.message ?? String(err)}`, { status: 502 });
   }
 }

@@ -24,15 +24,18 @@ export async function POST(request: Request): Promise<Response> {
 
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
-    return new Response("BLOB_READ_WRITE_TOKEN is not set in environment variables", { status: 500 });
+    return new Response("Storage not configured", { status: 500 });
   }
 
   try {
     const blob = await put(`uploads/${Date.now()}-${file.name}`, file, {
-      access: "public",
+      access: "private",
       token,
     });
-    return Response.json({ url: blob.url });
+
+    // Return a proxy URL — the proxy fetches the private blob server-side
+    const proxyUrl = `/api/image?url=${encodeURIComponent(blob.url)}`;
+    return Response.json({ url: proxyUrl });
   } catch (err: any) {
     return new Response(`Upload error: ${err?.message ?? String(err)}`, { status: 500 });
   }
