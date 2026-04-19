@@ -1,4 +1,3 @@
-import { head } from "@vercel/blob";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest): Promise<Response> {
@@ -10,36 +9,44 @@ export async function GET(request: NextRequest): Promise<Response> {
   }
 
   // Only allow proxying Vercel Blob URLs
-  if (!url.includes("vercel-storage.com") && !url.includes("public.blob.vercel-storage.com")) {
+  if (!url.includes("vercel-storage.com")) {
     return new Response("Invalid URL", { status: 400 });
   }
 
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+
   try {
-    // Fetch the private blob server-side (token is in env)
+    // Try with Authorization header first
     const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
-      },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
     if (!res.ok) {
-      return new Response("Image not found", { status: 404 });
+      // Try with token as query param
+      const urlWithToken = token ? `${url}${url.includes("?") ? "&" : "?"}token=${token}` : url;
+      const res2 = await fetch(urlWithToken);
+
+      if (!res2.ok) {
+        return new Response(`Image not found (${res2.status})`, { status: 404 });
+      }
+
+      const contentType = res2.headers.get("content-type") ?? "image/jpeg";
+      return new Response(res2.body, {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
     }
 
     const contentType = res.headers.get("content-type") ?? "image/jpeg";
-    const body = res.body;
-
-    if (!body) {
-      return new Response("Empty response", { status: 502 });
-    }
-
-    return new Response(body, {
+    return new Response(res.body, {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
-  } catch {
-    return new Response("Failed to fetch image", { status: 502 });
+  } catch (err: any) {
+    return new Response(`Failed to fetch image: ${err?.message}`, { status: 502 });
   }
 }
