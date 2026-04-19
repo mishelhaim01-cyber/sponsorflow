@@ -1,4 +1,3 @@
-import { getDownloadUrl } from "@vercel/blob";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest): Promise<Response> {
@@ -18,12 +17,42 @@ export async function GET(request: NextRequest): Promise<Response> {
     return new Response("Storage not configured", { status: 500 });
   }
 
+  // Try fetching with Authorization header
   try {
-    // Generate a short-lived signed download URL and redirect to it
-    const downloadUrl = await getDownloadUrl(url, { token });
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    return Response.redirect(downloadUrl, 302);
-  } catch (err: any) {
-    return new Response(`Image error: ${err?.message ?? String(err)}`, { status: 502 });
+    if (res.ok) {
+      const contentType = res.headers.get("content-type") ?? "image/jpeg";
+      return new Response(res.body, {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "private, max-age=3600",
+        },
+      });
+    }
+  } catch {
+    // fall through to next attempt
   }
+
+  // Try fetching with token as query param
+  try {
+    const urlWithToken = `${url}${url.includes("?") ? "&" : "?"}token=${token}`;
+    const res = await fetch(urlWithToken);
+
+    if (res.ok) {
+      const contentType = res.headers.get("content-type") ?? "image/jpeg";
+      return new Response(res.body, {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "private, max-age=3600",
+        },
+      });
+    }
+  } catch {
+    // fall through
+  }
+
+  return new Response("Could not load image", { status: 404 });
 }
