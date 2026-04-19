@@ -89,7 +89,7 @@ export function DeckTierCard({ tier, primaryColor, slug, featured = false }: Pro
       <div className="px-7 pb-7 pt-3 space-y-4">
         {/* Confirmed public sponsors */}
         {tier.publicSponsors.length > 0 && (
-          <div className="rounded-lg bg-gray-50 px-4 py-3">
+          <div className="rounded-lg border border-gray-100 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
               {tier.confirmedCount === 1 ? "Presenting sponsor" : "Presenting sponsors"}
             </p>
@@ -116,9 +116,8 @@ export function DeckTierCard({ tier, primaryColor, slug, featured = false }: Pro
         {/* Availability */}
         <div className="flex items-center gap-2.5">
           <span
-            className={`h-2 w-2 shrink-0 rounded-full ${
-              isFull ? "bg-gray-300" : isLastSpot ? "bg-amber-400" : "bg-emerald-400"
-            }`}
+            className={`h-2 w-2 shrink-0 rounded-full ${isFull ? "bg-gray-300" : ""}`}
+            style={!isFull ? { backgroundColor: primaryColor } : undefined}
           />
           <span className={`text-xs font-medium ${isFull ? "text-gray-400" : "text-gray-600"}`}>
             {isFull

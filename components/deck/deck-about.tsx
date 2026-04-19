@@ -12,11 +12,11 @@ export function DeckAbout({ sections, primaryColor }: Props) {
   if (sections.length === 0) return null;
 
   return (
-    <section className="bg-white">
+    <section className="bg-white divide-y divide-gray-100">
       {sections.map((section, i) => (
         <div
           key={i}
-          className={`py-16 md:py-20 ${i % 2 === 1 ? "bg-gray-50" : "bg-white"}`}
+          className="py-16 md:py-20"
         >
           <div className="max-w-5xl mx-auto px-8">
             <div className="flex flex-col md:flex-row gap-8 md:gap-20">
