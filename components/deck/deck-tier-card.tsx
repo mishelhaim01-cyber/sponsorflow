@@ -14,11 +14,8 @@ export type PublicTierData = {
   totalSlots: number;
   description: string | null;
   benefits: string[];
-  /** Count of ALL confirmed sponsorships (public + private) — used for remaining calculation */
   confirmedCount: number;
-  /** totalSlots - confirmedCount */
   remaining: number;
-  /** Only confirmed + isPublic sponsorships — safe to display */
   publicSponsors: PublicSponsor[];
 };
 
@@ -26,30 +23,50 @@ type Props = {
   tier: PublicTierData;
   primaryColor: string;
   slug: string;
+  featured?: boolean;
 };
 
-export function DeckTierCard({ tier, primaryColor, slug }: Props) {
+export function DeckTierCard({ tier, primaryColor, slug, featured = false }: Props) {
   const isFull = tier.remaining <= 0;
   const isLastSpot = tier.remaining === 1;
 
   return (
-    <div className="deck-tier-card flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Coloured header */}
-      <div className="px-7 py-7" style={{ backgroundColor: primaryColor }}>
-        <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-2">
+    <div className="flex flex-col rounded-2xl bg-white overflow-hidden shadow-xl">
+      {/* Top accent bar — thicker on featured */}
+      <div
+        className={featured ? "h-2" : "h-1"}
+        style={{ backgroundColor: primaryColor }}
+      />
+
+      {/* Header */}
+      <div className="px-7 pt-7 pb-5">
+        {featured && (
+          <div className="mb-3">
+            <span
+              className="inline-block rounded-full px-3 py-0.5 text-xs font-bold uppercase tracking-wide text-white"
+              style={{ backgroundColor: primaryColor }}
+            >
+              Top Package
+            </span>
+          </div>
+        )}
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
           {tier.name}
         </p>
-        <p className="text-4xl font-bold text-white leading-none">
+        <p className="text-4xl font-bold text-gray-900 leading-none">
           {formatCurrency(tier.price)}
         </p>
         {tier.description && (
-          <p className="mt-3 text-sm text-white/75 leading-relaxed">
+          <p className="mt-3 text-sm text-gray-500 leading-relaxed">
             {tier.description}
           </p>
         )}
       </div>
 
-      {/* Body — benefits */}
+      {/* Divider */}
+      <div className="mx-7 border-t border-gray-100" />
+
+      {/* Benefits */}
       <div className="flex-1 px-7 py-6">
         {tier.benefits.length > 0 && (
           <ul className="space-y-3">
@@ -69,11 +86,11 @@ export function DeckTierCard({ tier, primaryColor, slug }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-100 px-7 py-5 space-y-4">
+      <div className="px-7 pb-7 pt-3 space-y-4">
         {/* Confirmed public sponsors */}
         {tier.publicSponsors.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2.5">
+          <div className="rounded-lg bg-gray-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
               {tier.confirmedCount === 1 ? "Presenting sponsor" : "Presenting sponsors"}
             </p>
             <div className="flex flex-wrap items-center gap-4">
@@ -84,7 +101,7 @@ export function DeckTierCard({ tier, primaryColor, slug }: Props) {
                     key={sponsor.id}
                     src={sponsor.sponsorLogoUrl}
                     alt={sponsor.sponsorName}
-                    className="h-8 w-auto max-w-[120px] object-contain"
+                    className="h-7 w-auto max-w-[100px] object-contain"
                   />
                 ) : (
                   <span key={sponsor.id} className="text-sm font-semibold text-gray-700">
@@ -100,15 +117,15 @@ export function DeckTierCard({ tier, primaryColor, slug }: Props) {
         <div className="flex items-center gap-2.5">
           <span
             className={`h-2 w-2 shrink-0 rounded-full ${
-              isFull ? "bg-gray-300" : isLastSpot ? "bg-amber-400" : "bg-green-400"
+              isFull ? "bg-gray-300" : isLastSpot ? "bg-amber-400" : "bg-emerald-400"
             }`}
           />
-          <span className={`text-sm font-medium ${isFull ? "text-gray-400" : "text-gray-700"}`}>
+          <span className={`text-xs font-medium ${isFull ? "text-gray-400" : "text-gray-600"}`}>
             {isFull
               ? "All spots filled"
               : isLastSpot
-                ? "1 spot remaining — last chance"
-                : `${tier.remaining} of ${tier.totalSlots} spot${tier.totalSlots !== 1 ? "s" : ""} remaining`}
+              ? "1 spot remaining — last chance"
+              : `${tier.remaining} of ${tier.totalSlots} spot${tier.totalSlots !== 1 ? "s" : ""} remaining`}
           </span>
         </div>
 

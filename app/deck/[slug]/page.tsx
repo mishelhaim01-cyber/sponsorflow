@@ -106,8 +106,11 @@ export default async function PublicDeckPage({
         ticketButtonText={campaign.ticketButtonText}
       />
 
+      {/* Thin accent bar separating hero from content */}
+      <div className="h-1.5" style={{ backgroundColor: primaryColor }} />
+
       {campaign.sections.length > 0 && (
-        <DeckAbout sections={campaign.sections} />
+        <DeckAbout sections={campaign.sections} primaryColor={primaryColor} />
       )}
 
       {tiers.length > 0 && (
