@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Prevent Next.js from bundling these heavy native binaries —
   // they must be loaded from the filesystem at runtime, not inlined.
   serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
@@ -15,4 +14,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
