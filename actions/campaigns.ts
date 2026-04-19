@@ -83,6 +83,9 @@ export async function updateCampaign(
     secondaryColor: (formData.get("secondaryColor") as string) || null,
     isPublic: formData.get("isPublic") === "true",
     status: (formData.get("status") as string) || undefined,
+    venue: (formData.get("venue") as string) || null,
+    ticketUrl: (formData.get("ticketUrl") as string) || null,
+    ticketButtonText: (formData.get("ticketButtonText") as string) || null,
   });
 
   if (!parsed.success) {

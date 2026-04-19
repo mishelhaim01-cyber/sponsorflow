@@ -12,9 +12,35 @@ type Props = {
   eventDate: Date | null;
   heroImageUrl: string | null;
   primaryColor: string;
+  venue?: string | null;
+  ticketUrl?: string | null;
+  ticketButtonText?: string | null;
 };
 
-export function DeckHero({ name, eventDate, heroImageUrl, primaryColor }: Props) {
+function TicketButton({ url, label }: { url: string; label: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 shadow-md hover:bg-gray-100 transition-colors"
+    >
+      🎟 {label}
+    </a>
+  );
+}
+
+export function DeckHero({
+  name,
+  eventDate,
+  heroImageUrl,
+  primaryColor,
+  venue,
+  ticketUrl,
+  ticketButtonText,
+}: Props) {
+  const buttonLabel = ticketButtonText?.trim() || "Buy Tickets";
+
   if (heroImageUrl) {
     return (
       <div
@@ -36,6 +62,10 @@ export function DeckHero({ name, eventDate, heroImageUrl, primaryColor }: Props)
           {eventDate && (
             <p className="mt-4 text-lg text-white/70 font-medium">{formatEventDate(eventDate)}</p>
           )}
+          {venue && (
+            <p className="mt-1 text-base text-white/60">📍 {venue}</p>
+          )}
+          {ticketUrl && <TicketButton url={ticketUrl} label={buttonLabel} />}
         </div>
       </div>
     );
@@ -67,6 +97,10 @@ export function DeckHero({ name, eventDate, heroImageUrl, primaryColor }: Props)
         {eventDate && (
           <p className="mt-4 text-lg text-white/70 font-medium">{formatEventDate(eventDate)}</p>
         )}
+        {venue && (
+          <p className="mt-1 text-base text-white/60">📍 {venue}</p>
+        )}
+        {ticketUrl && <TicketButton url={ticketUrl} label={buttonLabel} />}
       </div>
     </div>
   );

@@ -27,6 +27,9 @@ export const updateCampaignSchema = z.object({
     .nullable(),
   isPublic: z.boolean().optional(),
   status: z.enum(["draft", "active", "archived"]).optional(),
+  venue: z.string().max(200).optional().nullable(),
+  ticketUrl: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
+  ticketButtonText: z.string().max(80).optional().nullable(),
 });
 
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;

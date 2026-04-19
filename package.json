@@ -13,12 +13,13 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@clerk/nextjs": "^5.7.5",
     "@prisma/client": "^5.22.0",
-    "clsx": "^2.1.1",
-    "next": "14.2.29",
     "@sparticuz/chromium": "^123.0.0",
     "@vercel/blob": "^0.24.0",
+    "clsx": "^2.1.1",
+    "next": "14.2.29",
     "puppeteer-core": "^22.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

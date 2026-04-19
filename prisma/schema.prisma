@@ -45,6 +45,11 @@ model Campaign {
 
   // ── Event details ─────────────────────────────────
   eventDate DateTime?
+  venue     String?
+
+  // ── Ticket link ───────────────────────────────────
+  ticketUrl        String?
+  ticketButtonText String?
 
   // ── Legacy content fields (kept for DB compatibility) ─
   organizationOverview String?

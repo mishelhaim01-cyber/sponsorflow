@@ -38,6 +38,9 @@ export default async function PublicDeckPage({
     select: {
       name: true,
       eventDate: true,
+      venue: true,
+      ticketUrl: true,
+      ticketButtonText: true,
       ctaText: true,
       ctaEmails: true,
       heroImageUrl: true,
@@ -98,6 +101,9 @@ export default async function PublicDeckPage({
         eventDate={campaign.eventDate}
         heroImageUrl={campaign.heroImageUrl}
         primaryColor={primaryColor}
+        venue={campaign.venue}
+        ticketUrl={campaign.ticketUrl}
+        ticketButtonText={campaign.ticketButtonText}
       />
 
       {campaign.sections.length > 0 && (

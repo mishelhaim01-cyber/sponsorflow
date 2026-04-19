@@ -1,9 +1,10 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { updateCampaign, type FormState } from "@/actions/campaigns";
 import { ImageUpload } from "./image-upload";
+import { ImportDeckButton } from "./import-deck-button";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -58,9 +59,27 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
     initialSections.length > 0 ? initialSections : []
   );
 
-  const eventDateValue = campaign.eventDate
-    ? new Date(campaign.eventDate).toISOString().split("T")[0]
-    : "";
+  // Controlled state for fields that can be overridden by PDF import
+  const [name, setName] = useState(campaign.name ?? "");
+  const [venue, setVenue] = useState(campaign.venue ?? "");
+  const [ticketUrl, setTicketUrl] = useState(campaign.ticketUrl ?? "");
+  const [ticketButtonText, setTicketButtonText] = useState(campaign.ticketButtonText ?? "");
+  const [ctaText, setCtaText] = useState(campaign.ctaText ?? "");
+  const [eventDateValue, setEventDateValue] = useState(
+    campaign.eventDate ? new Date(campaign.eventDate).toISOString().split("T")[0] : ""
+  );
+  const [importSuccess, setImportSuccess] = useState(false);
+
+  function handleImport(data: any) {
+    if (data.name) setName(data.name);
+    if (data.eventDate) setEventDateValue(data.eventDate);
+    if (data.venue) setVenue(data.venue);
+    if (data.ticketUrl) setTicketUrl(data.ticketUrl);
+    if (data.ticketButtonText) setTicketButtonText(data.ticketButtonText);
+    if (data.ctaText) setCtaText(data.ctaText);
+    if (data.sections?.length > 0) setSections(data.sections);
+    setImportSuccess(true);
+  }
 
   function addEmail() {
     setEmails((prev) => [...prev, ""]);
@@ -90,6 +109,21 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
 
   return (
     <form action={formAction} className="space-y-10">
+      {/* ── Import banner ─────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-gray-700">Import from existing PDF deck</p>
+          <p className="text-xs text-gray-400 mt-0.5">Claude will read your PDF and auto-fill the fields below. You can review and edit before saving.</p>
+        </div>
+        <ImportDeckButton onImport={handleImport} />
+      </div>
+
+      {importSuccess && (
+        <div className="rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700">
+          ✓ PDF imported — fields updated below. Review everything and hit <strong>Save changes</strong>.
+        </div>
+      )}
+
       {state && "error" in state && (
         <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {state.error}
@@ -106,10 +140,14 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
         <SectionHeader title="Basic info" />
         <div className="space-y-4">
           <Field label="Campaign name">
-            <input name="name" type="text" required defaultValue={campaign.name} className={inputClass} />
-          </Field>
-          <Field label="Event date" hint="Shown on the public deck.">
-            <input name="eventDate" type="date" defaultValue={eventDateValue} className={inputClass} />
+            <input
+              name="name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={inputClass}
+            />
           </Field>
           <Field label="Status">
             <select name="status" defaultValue={campaign.status} className={inputClass}>
@@ -118,6 +156,63 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
               <option value="archived">Archived</option>
             </select>
           </Field>
+        </div>
+      </section>
+
+      <hr className="border-gray-200" />
+
+      {/* ── Event Information ──────────────────────── */}
+      <section>
+        <SectionHeader title="Event information" description="Details shown in the hero banner of your public deck." />
+        <div className="space-y-4">
+          <Field label="Event date" hint="Shown prominently on the deck.">
+            <input
+              name="eventDate"
+              type="date"
+              value={eventDateValue}
+              onChange={(e) => setEventDateValue(e.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Venue / Location" hint="e.g. Rogers Centre, Toronto, ON">
+            <input
+              name="venue"
+              type="text"
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              placeholder="e.g. Rogers Centre, Toronto, ON"
+              className={inputClass}
+            />
+          </Field>
+
+          <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ticket link</p>
+            <Field label="Ticket URL" hint="Link to your ticketing platform (Eventbrite, Ticketmaster, etc.)">
+              <input
+                name="ticketUrl"
+                type="url"
+                value={ticketUrl}
+                onChange={(e) => setTicketUrl(e.target.value)}
+                placeholder="https://eventbrite.com/e/your-event"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Button label" hint='What the button says — e.g. "Buy Tickets", "Get Your Tickets", "Register Now"'>
+              <input
+                name="ticketButtonText"
+                type="text"
+                value={ticketButtonText}
+                onChange={(e) => setTicketButtonText(e.target.value)}
+                placeholder="Buy Tickets"
+                className={inputClass}
+              />
+            </Field>
+            {ticketUrl && (
+              <p className="text-xs text-gray-400">
+                Preview: a white pill button labeled &quot;<strong>{ticketButtonText || "Buy Tickets"}</strong>&quot; will appear in your hero banner, linking to the URL above.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
@@ -200,7 +295,8 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
             <input
               name="ctaText"
               type="text"
-              defaultValue={campaign.ctaText ?? ""}
+              value={ctaText}
+              onChange={(e) => setCtaText(e.target.value)}
               placeholder="Interested in sponsoring? Let's talk."
               className={inputClass}
             />
