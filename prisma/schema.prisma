@@ -38,35 +38,59 @@ model Campaign {
   userId String
   user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   name   String
-  // Immutable after first publish — changing it would break shared links
   slug   String         @unique
   status CampaignStatus @default(draft)
 
-  // Public visibility toggle — deck is only accessible when true
   isPublic Boolean @default(false)
 
   // ── Event details ─────────────────────────────────
   eventDate DateTime?
 
-  // ── Sponsor-facing deck content ───────────────────
+  // ── Legacy content fields (kept for DB compatibility) ─
   organizationOverview String?
   audienceSummary      String?
   campaignGoals        String?
-  ctaText              String?
-  ctaEmail             String?
+
+  // ── CTA ───────────────────────────────────────────
+  ctaText   String?
+  ctaEmails String[] // Multiple contact emails
+
+  // ── Legacy section customization (kept for DB compatibility) ─
+  aboutTitle    String?
+  audienceTitle String?
+  goalsTitle    String?
+  showAbout     Boolean @default(true)
+  showAudience  Boolean @default(true)
+  showGoals     Boolean @default(true)
 
   // ── Visual ────────────────────────────────────────
-  heroImageUrl    String?
-  primaryColor    String? // hex e.g. "#1a1a2e"
-  secondaryColor  String?
-  templateId      String  @default("default")
+  heroImageUrl   String?
+  primaryColor   String?
+  secondaryColor String?
+  templateId     String  @default("default")
 
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   tiers     SponsorshipTier[]
+  sections  CampaignSection[]
 
   @@index([userId])
   @@index([slug])
+}
+
+// Dynamic content sections — replaces the 3 hardcoded content fields
+model CampaignSection {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  title     String
+  content   String
+  sortOrder Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([campaignId])
 }
 
 model SponsorshipTier {
@@ -78,10 +102,10 @@ model SponsorshipTier {
   price       Decimal  @db.Decimal(10, 2)
   totalSlots  Int
   description String?
-  benefits    String[] // Postgres text[] — list of benefit strings
+  benefits    String[]
   sortOrder   Int      @default(0)
 
-  createdAt    DateTime       @default(now())
+  createdAt    DateTime      @default(now())
   sponsorships Sponsorship[]
 
   @@index([campaignId])
@@ -93,14 +117,13 @@ model Sponsorship {
   tier   SponsorshipTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
 
   sponsorName    String
+  sponsorEmail   String?
+  sponsorCompany String?
   sponsorLogoUrl String?
   status         SponsorshipStatus @default(draft)
 
-  // When false, name/logo are hidden on the public deck
   isPublic Boolean @default(true)
-
-  // Internal notes — never exposed on public deck
-  notes String?
+  notes    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

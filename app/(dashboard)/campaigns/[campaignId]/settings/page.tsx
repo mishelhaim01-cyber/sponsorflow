@@ -14,17 +14,28 @@ export default async function CampaignSettingsPage({
 
   const campaign = await prisma.campaign.findUnique({
     where: { id: params.campaignId, userId },
+    include: {
+      sections: { orderBy: { sortOrder: "asc" } },
+    },
   });
 
   if (!campaign) notFound();
 
-  // Bind campaignId into the action — the client form never needs to know the ID
   const updateAction = updateCampaign.bind(null, campaign.id);
+
+  const sections = campaign.sections.map((s) => ({
+    title: s.title,
+    content: s.content,
+  }));
 
   return (
     <div className="max-w-2xl space-y-12">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <CampaignSettingsForm campaign={campaign} updateAction={updateAction} />
+        <CampaignSettingsForm
+          campaign={campaign}
+          sections={sections}
+          updateAction={updateAction}
+        />
       </div>
 
       {/* Danger zone */}

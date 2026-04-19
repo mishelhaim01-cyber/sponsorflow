@@ -9,7 +9,6 @@ import { SponsorshipForm } from "./sponsorship-form";
 
 type Props = {
   sponsorship: SponsorshipRowData;
-  // Action is bound server-side: updateSponsorship.bind(null, id, tierId, campaignId)
   updateAction: (prevState: FormState, formData: FormData) => Promise<FormState>;
   tierId: string;
   campaignId: string;
@@ -23,17 +22,11 @@ export function SponsorshipRow({
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [deleting, startDeleting] = useTransition();
+  const isIncoming = sponsorship.status === "in_conversation" && (sponsorship.sponsorEmail || sponsorship.sponsorCompany);
 
   function handleDelete() {
-    if (
-      !confirm(
-        `Remove ${sponsorship.sponsorName}? This cannot be undone.`
-      )
-    )
-      return;
-    startDeleting(() =>
-      deleteSponsorship(sponsorship.id, tierId, campaignId)
-    );
+    if (!confirm(`Remove ${sponsorship.sponsorName}? This cannot be undone.`)) return;
+    startDeleting(() => deleteSponsorship(sponsorship.id, tierId, campaignId));
   }
 
   if (editing) {
@@ -51,52 +44,66 @@ export function SponsorshipRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <SponsorshipStatusBadge status={sponsorship.status} />
+    <div className={`rounded-lg border bg-white px-4 py-3 ${isIncoming ? "border-amber-200 bg-amber-50" : "border-gray-200"}`}>
+      {isIncoming && (
+        <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">
+          New interest — awaiting your response
+        </p>
+      )}
 
-      <div className="flex-1 min-w-0">
-        <span className="text-sm font-medium text-gray-900">
-          {sponsorship.sponsorName}
-        </span>
-        {sponsorship.notes && (
-          <span
-            className="ml-2 text-xs text-gray-400"
-            title="Has internal notes"
-          >
-            ∗
+      <div className="flex items-center gap-3">
+        <SponsorshipStatusBadge status={sponsorship.status} />
+
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-medium text-gray-900">
+            {sponsorship.sponsorName}
           </span>
-        )}
+          {sponsorship.sponsorCompany && (
+            <span className="ml-1.5 text-sm text-gray-500">
+              · {sponsorship.sponsorCompany}
+            </span>
+          )}
+          {sponsorship.notes && (
+            <span className="ml-2 text-xs text-gray-400" title="Has internal notes">∗</span>
+          )}
+        </div>
+
+        <span
+          className={`shrink-0 text-xs font-medium ${sponsorship.isPublic ? "text-gray-500" : "text-gray-300"}`}
+          title={sponsorship.isPublic ? "Visible on public deck" : "Hidden from public deck"}
+        >
+          {sponsorship.isPublic ? "Public" : "Hidden"}
+        </span>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setEditing(true)}
+            className="rounded border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors"
+          >
+            {deleting ? "…" : "Remove"}
+          </button>
+        </div>
       </div>
 
-      {/* Deck visibility indicator */}
-      <span
-        className={`shrink-0 text-xs font-medium ${
-          sponsorship.isPublic ? "text-gray-500" : "text-gray-300"
-        }`}
-        title={
-          sponsorship.isPublic
-            ? "Visible on public deck"
-            : "Hidden from public deck"
-        }
-      >
-        {sponsorship.isPublic ? "Public" : "Hidden"}
-      </span>
-
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-        >
-          Edit
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="rounded border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors"
-        >
-          {deleting ? "…" : "Remove"}
-        </button>
-      </div>
+      {/* Contact info for incoming requests */}
+      {sponsorship.sponsorEmail && (
+        <div className="mt-2 pt-2 border-t border-amber-100 flex items-center gap-4 text-sm">
+          <a
+            href={`mailto:${sponsorship.sponsorEmail}`}
+            className="text-amber-700 hover:underline font-medium"
+          >
+            {sponsorship.sponsorEmail}
+          </a>
+          <span className="text-gray-400 text-xs">Click to send invoice</span>
+        </div>
+      )}
     </div>
   );
 }

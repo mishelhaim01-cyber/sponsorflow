@@ -37,6 +37,8 @@ export default async function TierSponsorshipsPage({
   const sponsorshipRows: SponsorshipRowData[] = tier.sponsorships.map((s) => ({
     id: s.id,
     sponsorName: s.sponsorName,
+    sponsorEmail: s.sponsorEmail,
+    sponsorCompany: s.sponsorCompany,
     sponsorLogoUrl: s.sponsorLogoUrl,
     status: s.status,
     isPublic: s.isPublic,

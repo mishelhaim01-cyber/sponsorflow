@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/lib/utils";
+import { ReserveSpotForm } from "./reserve-spot-form";
 
 export type PublicSponsor = {
   id: string;
@@ -24,37 +25,42 @@ export type PublicTierData = {
 type Props = {
   tier: PublicTierData;
   primaryColor: string;
+  slug: string;
 };
 
-export function DeckTierCard({ tier, primaryColor }: Props) {
+export function DeckTierCard({ tier, primaryColor, slug }: Props) {
   const isFull = tier.remaining <= 0;
   const isLastSpot = tier.remaining === 1;
 
   return (
-    <div className="deck-tier-card flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Coloured header — tier name + price */}
-      <div className="px-7 py-6" style={{ backgroundColor: primaryColor }}>
+    <div className="deck-tier-card flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      {/* Coloured header */}
+      <div className="px-7 py-7" style={{ backgroundColor: primaryColor }}>
         <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-2">
           {tier.name}
         </p>
-        <p className="text-3xl font-bold text-white leading-none">
+        <p className="text-4xl font-bold text-white leading-none">
           {formatCurrency(tier.price)}
         </p>
-      </div>
-
-      {/* Body — description + benefits */}
-      <div className="flex-1 px-7 py-6">
         {tier.description && (
-          <p className="text-sm text-gray-500 leading-relaxed mb-5">
+          <p className="mt-3 text-sm text-white/75 leading-relaxed">
             {tier.description}
           </p>
         )}
+      </div>
 
+      {/* Body — benefits */}
+      <div className="flex-1 px-7 py-6">
         {tier.benefits.length > 0 && (
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {tier.benefits.map((benefit) => (
               <li key={benefit} className="flex items-start gap-3 text-sm text-gray-700">
-                <span className="mt-0.5 shrink-0 text-green-500 font-bold">✓</span>
+                <span
+                  className="mt-0.5 shrink-0 h-5 w-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  ✓
+                </span>
                 {benefit}
               </li>
             ))}
@@ -62,7 +68,7 @@ export function DeckTierCard({ tier, primaryColor }: Props) {
         )}
       </div>
 
-      {/* Footer — confirmed sponsors + availability */}
+      {/* Footer */}
       <div className="border-t border-gray-100 px-7 py-5 space-y-4">
         {/* Confirmed public sponsors */}
         {tier.publicSponsors.length > 0 && (
@@ -81,10 +87,7 @@ export function DeckTierCard({ tier, primaryColor }: Props) {
                     className="h-8 w-auto max-w-[120px] object-contain"
                   />
                 ) : (
-                  <span
-                    key={sponsor.id}
-                    className="text-sm font-semibold text-gray-700"
-                  >
+                  <span key={sponsor.id} className="text-sm font-semibold text-gray-700">
                     {sponsor.sponsorName}
                   </span>
                 )
@@ -100,11 +103,7 @@ export function DeckTierCard({ tier, primaryColor }: Props) {
               isFull ? "bg-gray-300" : isLastSpot ? "bg-amber-400" : "bg-green-400"
             }`}
           />
-          <span
-            className={`text-sm font-medium ${
-              isFull ? "text-gray-400" : "text-gray-700"
-            }`}
-          >
+          <span className={`text-sm font-medium ${isFull ? "text-gray-400" : "text-gray-700"}`}>
             {isFull
               ? "All spots filled"
               : isLastSpot
@@ -112,6 +111,15 @@ export function DeckTierCard({ tier, primaryColor }: Props) {
                 : `${tier.remaining} of ${tier.totalSlots} spot${tier.totalSlots !== 1 ? "s" : ""} remaining`}
           </span>
         </div>
+
+        {/* Reserve button */}
+        <ReserveSpotForm
+          tierId={tier.id}
+          tierName={tier.name}
+          slug={slug}
+          primaryColor={primaryColor}
+          isFull={isFull}
+        />
       </div>
     </div>
   );

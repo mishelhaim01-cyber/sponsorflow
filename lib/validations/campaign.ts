@@ -13,11 +13,7 @@ export const createCampaignSchema = z.object({
 export const updateCampaignSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   eventDate: z.string().optional().nullable(),
-  organizationOverview: z.string().max(1000).optional().nullable(),
-  audienceSummary: z.string().max(1000).optional().nullable(),
-  campaignGoals: z.string().max(1000).optional().nullable(),
   ctaText: z.string().max(300).optional().nullable(),
-  ctaEmail: z.string().email("Must be a valid email").optional().nullable().or(z.literal("")),
   heroImageUrl: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
   primaryColor: z
     .string()

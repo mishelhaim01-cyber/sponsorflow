@@ -7,8 +7,6 @@ import { DeckTiers } from "@/components/deck/deck-tiers";
 import { DeckCta } from "@/components/deck/deck-cta";
 import type { PublicTierData } from "@/components/deck/deck-tier-card";
 
-// ─── Metadata ────────────────────────────────────────────────────────────────
-
 export async function generateMetadata({
   params,
 }: {
@@ -16,18 +14,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const campaign = await prisma.campaign.findUnique({
     where: { slug: params.slug, isPublic: true },
-    select: { name: true, organizationOverview: true },
+    select: { name: true, sections: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
 
   if (!campaign) return { title: "Not found" };
 
   return {
     title: `${campaign.name} — Sponsorship Opportunities`,
-    description: campaign.organizationOverview ?? undefined,
+    description: campaign.sections[0]?.content ?? undefined,
   };
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function PublicDeckPage({
   params,
@@ -38,24 +34,18 @@ export default async function PublicDeckPage({
 }) {
   const isPrint = searchParams.print === "true";
   const campaign = await prisma.campaign.findUnique({
-    where: {
-      slug: params.slug,
-      isPublic: true, // 404 if not published — never leak draft campaign data
-    },
-    // Using select (not include) so the shape is explicit.
-    // Fields NOT selected here cannot appear in the response — this is the
-    // primary safety layer preventing internal data from reaching the public.
+    where: { slug: params.slug, isPublic: true },
     select: {
       name: true,
       eventDate: true,
-      organizationOverview: true,
-      audienceSummary: true,
-      campaignGoals: true,
       ctaText: true,
-      ctaEmail: true,
+      ctaEmails: true,
       heroImageUrl: true,
       primaryColor: true,
-      // userId, status, isPublic, createdAt, updatedAt, templateId — NOT selected
+      sections: {
+        orderBy: { sortOrder: "asc" },
+        select: { title: true, content: true },
+      },
       tiers: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -67,24 +57,15 @@ export default async function PublicDeckPage({
           benefits: true,
           _count: {
             select: {
-              // Count ALL confirmed sponsorships — includes private ones.
-              // This gives an accurate remaining count without exposing
-              // which sponsors are private.
               sponsorships: { where: { status: "confirmed" } },
             },
           },
           sponsorships: {
-            // Only confirmed + explicitly public sponsorships reach the deck.
-            // Both conditions are required — a confirmed sponsor who opted out
-            // of public visibility is still hidden.
             where: { isPublic: true, status: "confirmed" },
             select: {
               id: true,
               sponsorName: true,
               sponsorLogoUrl: true,
-              // notes — deliberately NOT selected; can never leak
-              // status — not needed on public deck
-              // isPublic — filtered in where clause; no need to expose
             },
           },
         },
@@ -96,7 +77,6 @@ export default async function PublicDeckPage({
 
   const primaryColor = campaign.primaryColor ?? "#111827";
 
-  // Serialize tiers: convert Prisma Decimal → string, flatten _count
   const tiers: PublicTierData[] = campaign.tiers.map((tier) => ({
     id: tier.id,
     name: tier.name,
@@ -109,12 +89,7 @@ export default async function PublicDeckPage({
     publicSponsors: tier.sponsorships,
   }));
 
-  const hasAbout =
-    campaign.organizationOverview ||
-    campaign.audienceSummary ||
-    campaign.campaignGoals;
-
-  const hasCta = campaign.ctaText || campaign.ctaEmail;
+  const hasCta = campaign.ctaText || campaign.ctaEmails.length > 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -125,22 +100,18 @@ export default async function PublicDeckPage({
         primaryColor={primaryColor}
       />
 
-      {hasAbout && (
-        <DeckAbout
-          organizationOverview={campaign.organizationOverview}
-          audienceSummary={campaign.audienceSummary}
-          campaignGoals={campaign.campaignGoals}
-        />
+      {campaign.sections.length > 0 && (
+        <DeckAbout sections={campaign.sections} />
       )}
 
       {tiers.length > 0 && (
-        <DeckTiers tiers={tiers} primaryColor={primaryColor} />
+        <DeckTiers tiers={tiers} primaryColor={primaryColor} slug={params.slug} />
       )}
 
       {hasCta && (
         <DeckCta
           ctaText={campaign.ctaText}
-          ctaEmail={campaign.ctaEmail}
+          ctaEmails={campaign.ctaEmails}
           primaryColor={primaryColor}
         />
       )}

@@ -62,14 +62,22 @@ export async function updateCampaign(
   });
   if (!existing) return { error: "Campaign not found." };
 
+  // Parse multiple emails — filter out empty strings
+  const ctaEmails = (formData.getAll("ctaEmail") as string[]).filter(
+    (e) => e.trim().length > 0
+  );
+
+  // Parse dynamic sections — zip title[] + content[] arrays
+  const sectionTitles = formData.getAll("sectionTitle") as string[];
+  const sectionContents = formData.getAll("sectionContent") as string[];
+  const sections = sectionTitles
+    .map((title, i) => ({ title: title.trim(), content: (sectionContents[i] ?? "").trim() }))
+    .filter((s) => s.title.length > 0);
+
   const parsed = updateCampaignSchema.safeParse({
     name: (formData.get("name") as string) || undefined,
     eventDate: (formData.get("eventDate") as string) || null,
-    organizationOverview: (formData.get("organizationOverview") as string) || null,
-    audienceSummary: (formData.get("audienceSummary") as string) || null,
-    campaignGoals: (formData.get("campaignGoals") as string) || null,
     ctaText: (formData.get("ctaText") as string) || null,
-    ctaEmail: (formData.get("ctaEmail") as string) || null,
     heroImageUrl: (formData.get("heroImageUrl") as string) || null,
     primaryColor: (formData.get("primaryColor") as string) || null,
     secondaryColor: (formData.get("secondaryColor") as string) || null,
@@ -81,13 +89,28 @@ export async function updateCampaign(
     return { error: parsed.error.errors[0].message };
   }
 
+  // Update campaign fields
   await prisma.campaign.update({
     where: { id: campaignId, userId },
     data: {
       ...parsed.data,
+      ctaEmails,
       eventDate: parsed.data.eventDate ? new Date(parsed.data.eventDate) : null,
     },
   });
+
+  // Replace all sections: delete existing, create new ones
+  await prisma.campaignSection.deleteMany({ where: { campaignId } });
+  if (sections.length > 0) {
+    await prisma.campaignSection.createMany({
+      data: sections.map((s, i) => ({
+        campaignId,
+        title: s.title,
+        content: s.content,
+        sortOrder: i,
+      })),
+    });
+  }
 
   revalidatePath(`/campaigns`);
   revalidatePath(`/campaigns/${campaignId}`);

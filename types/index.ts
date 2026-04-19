@@ -21,6 +21,8 @@ export type TierWithCount = SponsorshipTier & {
 export type SponsorshipRowData = {
   id: string;
   sponsorName: string;
+  sponsorEmail: string | null;
+  sponsorCompany: string | null;
   sponsorLogoUrl: string | null;
   status: import("@prisma/client").SponsorshipStatus;
   isPublic: boolean;
