@@ -8,7 +8,7 @@ type Props = {
 
 export function DeckTiers({ tiers, primaryColor, slug }: Props) {
   return (
-    <section className="py-20 bg-gray-900">
+    <section className="py-20" style={{ backgroundColor: primaryColor }}>
       <div className="max-w-5xl mx-auto px-8">
         {/* Header */}
         <div className="text-center mb-14">
