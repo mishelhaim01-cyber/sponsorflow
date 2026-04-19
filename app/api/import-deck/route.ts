@@ -28,8 +28,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   const buffer = Buffer.from(await file.arrayBuffer());
   let pdfText = "";
   try {
-    // Use lib path to avoid Next.js test-file issue
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+    const pdfParse = require("pdf-parse");
     const data = await pdfParse(buffer);
     pdfText = data.text ?? "";
   } catch {
