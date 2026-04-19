@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import Anthropic from "@anthropic-ai/sdk";
-
-const client = new Anthropic();
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request: NextRequest): Promise<Response> {
   const { userId } = await auth();
@@ -21,27 +19,18 @@ export async function POST(request: NextRequest): Promise<Response> {
     return new Response("File must be under 20MB", { status: 400 });
   }
 
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (!apiKey) {
+    return new Response("Google AI API key not configured", { status: 500 });
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const base64 = buffer.toString("base64");
 
-  const message = await client.messages.create({
-    model: "claude-opus-4-5",
-    max_tokens: 2048,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: "application/pdf",
-              data: base64,
-            },
-          } as any,
-          {
-            type: "text",
-            text: `Extract structured data from this sponsorship deck and return ONLY a valid JSON object — no markdown, no explanation.
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = `Extract structured data from this sponsorship deck PDF and return ONLY a valid JSON object — no markdown, no explanation.
 
 Return this exact shape:
 {
@@ -49,7 +38,7 @@ Return this exact shape:
   "eventDate": "YYYY-MM-DD or null",
   "venue": "venue or location or null",
   "ticketUrl": "ticket purchase URL if mentioned or null",
-  "ticketButtonText": "ticket button label if mentioned (e.g. 'Buy Tickets') or null",
+  "ticketButtonText": "ticket button label if mentioned or null",
   "ctaText": "call-to-action text or null",
   "sections": [
     { "title": "section heading", "content": "section body text" }
@@ -66,23 +55,25 @@ Return this exact shape:
 }
 
 Rules:
-- sections: extract any descriptive blocks — About Us, Our Audience, Why Sponsor Us, Past Sponsors, Our Reach, etc.
-- tiers: extract sponsorship packages with pricing. price must be a number (no currency symbols). If slots not mentioned, use 1.
-- If a field is not found in the document, use null (not an empty string).
-- Return ONLY the JSON object.`,
-          },
-        ],
-      },
-    ],
-  });
+- sections: extract any descriptive blocks — About Us, Our Audience, Why Sponsor, Past Sponsors, Our Reach, etc.
+- tiers: extract sponsorship packages. price must be a number (no currency symbols). If slots not mentioned, use 1.
+- If a field is not found, use null.
+- Return ONLY the JSON object.`;
 
-  const content = message.content[0];
-  if (content.type !== "text") {
-    return new Response("Unexpected AI response", { status: 500 });
-  }
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        mimeType: "application/pdf",
+        data: base64,
+      },
+    },
+    prompt,
+  ]);
+
+  const text = result.response.text();
 
   try {
-    const jsonText = content.text
+    const jsonText = text
       .replace(/^```json\s*/m, "")
       .replace(/^```\s*/m, "")
       .replace(/\s*```$/m, "")
