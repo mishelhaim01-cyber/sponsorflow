@@ -26,7 +26,7 @@ export async function sendSponsorInterestEmail({
   if (!process.env.RESEND_API_KEY) return; // Silently skip if not configured
 
   await resend.emails.send({
-    from: "SponsorFlow <notifications@sponsorflow.co>",
+    from: "SponsorFlow <onboarding@resend.dev>",
     to: ownerEmail,
     subject: `New sponsor interest — ${campaignName}`,
     html: `
