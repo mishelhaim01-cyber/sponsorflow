@@ -3,6 +3,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { useState } from "react";
 import { updateCampaign, type FormState } from "@/actions/campaigns";
+import { ImageUpload } from "./image-upload";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -249,15 +250,12 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
       <section>
         <SectionHeader title="Visual" description="Customize the look of your public deck." />
         <div className="space-y-4">
-          <Field label="Hero image URL" hint="A wide banner image shown at the top of the deck.">
-            <input
-              name="heroImageUrl"
-              type="url"
-              defaultValue={campaign.heroImageUrl ?? ""}
-              placeholder="https://..."
-              className={inputClass}
-            />
-          </Field>
+          <ImageUpload
+            name="heroImageUrl"
+            currentUrl={campaign.heroImageUrl}
+            label="Hero image"
+            hint="Wide banner shown at the top of your deck. JPG, PNG or WebP."
+          />
           <div className="grid grid-cols-2 gap-4">
             <Field label="Primary color">
               <div className="flex items-center gap-3">
