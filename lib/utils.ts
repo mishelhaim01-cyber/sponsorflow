@@ -22,9 +22,9 @@ export function slugify(text: string): string {
  * Formats a Decimal/number as USD currency.
  */
 export function formatCurrency(amount: number | string): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-CA", {
     style: "currency",
-    currency: "USD",
+    currency: "CAD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(Number(amount));
