@@ -22,10 +22,18 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("File size must be under 5MB", { status: 400 });
   }
 
-  const blob = await put(`uploads/${Date.now()}-${file.name}`, file, {
-    access: "public",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    return new Response("BLOB_READ_WRITE_TOKEN is not set in environment variables", { status: 500 });
+  }
 
-  return Response.json({ url: blob.url });
+  try {
+    const blob = await put(`uploads/${Date.now()}-${file.name}`, file, {
+      access: "public",
+      token,
+    });
+    return Response.json({ url: blob.url });
+  } catch (err: any) {
+    return new Response(`Upload error: ${err?.message ?? String(err)}`, { status: 500 });
+  }
 }
