@@ -352,7 +352,7 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
                 />
               </div>
             </Field>
-            <Field label="Secondary color" hint="Used for the gradient in the hero banner when no photo is set.">
+            <Field label="Secondary color" hint="Used for accents and highlights throughout the deck.">
               <div className="flex items-center gap-3">
                 <input
                   name="secondaryColor"
@@ -363,14 +363,6 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
               </div>
             </Field>
           </div>
-          {/* Live gradient preview */}
-          <div
-            className="h-10 rounded-lg w-full"
-            style={{
-              background: `linear-gradient(135deg, ${campaign.primaryColor ?? "#111827"} 0%, ${campaign.secondaryColor ?? "#6366f1"} 100%)`,
-            }}
-          />
-          <p className="text-xs text-gray-400 -mt-2">↑ Hero gradient preview (when no photo is set)</p>
         </div>
       </section>
 

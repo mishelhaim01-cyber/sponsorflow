@@ -116,9 +116,7 @@ export function DeckHero({
   return (
     <div
       className="relative flex min-h-[440px] items-end lg:min-h-[520px] overflow-hidden"
-      style={{
-        background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
-      }}
+      style={{ backgroundColor: primaryColor }}
     >
       {/* Mesh overlay for texture */}
       <div
