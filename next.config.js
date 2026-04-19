@@ -7,7 +7,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
+    serverComponentsExternalPackages: ["@sparticuz/chromium", "puppeteer-core", "pdf-parse"],
   },
   images: {
     remotePatterns: [

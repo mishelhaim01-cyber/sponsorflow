@@ -24,13 +24,27 @@ export async function POST(request: NextRequest): Promise<Response> {
     return new Response("Google AI API key not configured", { status: 500 });
   }
 
+  // Extract text from PDF using pdf-parse
   const buffer = Buffer.from(await file.arrayBuffer());
-  const base64 = buffer.toString("base64");
+  let pdfText = "";
+  try {
+    // Use lib path to avoid Next.js test-file issue
+    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+    const data = await pdfParse(buffer);
+    pdfText = data.text ?? "";
+  } catch {
+    return new Response("Could not read PDF — make sure it contains selectable text", { status: 422 });
+  }
 
+  if (pdfText.trim().length < 30) {
+    return new Response("PDF appears to be image-only. Please use a PDF with selectable text.", { status: 422 });
+  }
+
+  // Send extracted text to Gemini
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const prompt = `Extract structured data from this sponsorship deck PDF and return ONLY a valid JSON object — no markdown, no explanation.
+  const prompt = `Extract structured data from this sponsorship deck text and return ONLY a valid JSON object — no markdown, no explanation.
 
 Return this exact shape:
 {
@@ -58,29 +72,24 @@ Rules:
 - sections: extract any descriptive blocks — About Us, Our Audience, Why Sponsor, Past Sponsors, Our Reach, etc.
 - tiers: extract sponsorship packages. price must be a number (no currency symbols). If slots not mentioned, use 1.
 - If a field is not found, use null.
-- Return ONLY the JSON object.`;
+- Return ONLY the JSON object, nothing else.
 
-  const result = await model.generateContent([
-    {
-      inlineData: {
-        mimeType: "application/pdf",
-        data: base64,
-      },
-    },
-    prompt,
-  ]);
-
-  const text = result.response.text();
+Deck text:
+${pdfText.slice(0, 12000)}`;
 
   try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
     const jsonText = text
       .replace(/^```json\s*/m, "")
       .replace(/^```\s*/m, "")
       .replace(/\s*```$/m, "")
       .trim();
+
     const extracted = JSON.parse(jsonText);
     return Response.json(extracted);
   } catch {
-    return new Response("Could not parse AI response", { status: 500 });
+    return new Response("AI could not parse the deck content", { status: 500 });
   }
 }
