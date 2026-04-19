@@ -68,6 +68,10 @@ model Campaign {
   showAudience  Boolean @default(true)
   showGoals     Boolean @default(true)
 
+  // ── Branding ──────────────────────────────────────
+  tagline        String?
+  logoUrl        String?
+
   // ── Visual ────────────────────────────────────────
   heroImageUrl   String?
   primaryColor   String?

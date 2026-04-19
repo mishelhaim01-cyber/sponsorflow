@@ -37,6 +37,8 @@ export default async function PublicDeckPage({
     where: { slug: params.slug, isPublic: true },
     select: {
       name: true,
+      tagline: true,
+      logoUrl: true,
       eventDate: true,
       venue: true,
       ticketUrl: true,
@@ -98,9 +100,12 @@ export default async function PublicDeckPage({
     <div className="min-h-screen bg-white">
       <DeckHero
         name={campaign.name}
+        tagline={campaign.tagline}
+        logoUrl={campaign.logoUrl}
         eventDate={campaign.eventDate}
         heroImageUrl={campaign.heroImageUrl}
         primaryColor={primaryColor}
+        secondaryColor={campaign.secondaryColor ?? "#6366f1"}
         venue={campaign.venue}
         ticketUrl={campaign.ticketUrl}
         ticketButtonText={campaign.ticketButtonText}

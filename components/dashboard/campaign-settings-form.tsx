@@ -61,6 +61,7 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
 
   // Controlled state for fields that can be overridden by PDF import
   const [name, setName] = useState(campaign.name ?? "");
+  const [tagline, setTagline] = useState(campaign.tagline ?? "");
   const [venue, setVenue] = useState(campaign.venue ?? "");
   const [ticketUrl, setTicketUrl] = useState(campaign.ticketUrl ?? "");
   const [ticketButtonText, setTicketButtonText] = useState(campaign.ticketButtonText ?? "");
@@ -346,14 +347,30 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
       <section>
         <SectionHeader title="Visual" description="Customize the look of your public deck." />
         <div className="space-y-4">
+          <Field label="Tagline" hint="Short subtitle shown below the campaign name in the hero.">
+            <input
+              name="tagline"
+              type="text"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              placeholder="e.g. Toronto's Biggest Annual Music Festival"
+              className={inputClass}
+            />
+          </Field>
+          <ImageUpload
+            name="logoUrl"
+            currentUrl={campaign.logoUrl}
+            label="Logo"
+            hint="Your organization logo. Shown in the top-left of the hero. Use a PNG with transparent background for best results."
+          />
           <ImageUpload
             name="heroImageUrl"
             currentUrl={campaign.heroImageUrl}
             label="Hero image"
-            hint="Wide banner shown at the top of your deck. JPG, PNG or WebP."
+            hint="Wide banner photo for the top of your deck. If no photo is set, a gradient using your brand colors is shown instead."
           />
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Primary color">
+            <Field label="Primary color" hint="Main brand color — used for accents, buttons, and the gradient hero.">
               <div className="flex items-center gap-3">
                 <input
                   name="primaryColor"
@@ -361,10 +378,9 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
                   defaultValue={campaign.primaryColor ?? "#111827"}
                   className="h-9 w-14 rounded border border-gray-300 p-0.5 cursor-pointer"
                 />
-                <span className="text-sm text-gray-500">{campaign.primaryColor ?? "#111827"}</span>
               </div>
             </Field>
-            <Field label="Secondary color">
+            <Field label="Secondary color" hint="Used for the gradient in the hero banner when no photo is set.">
               <div className="flex items-center gap-3">
                 <input
                   name="secondaryColor"
@@ -372,10 +388,17 @@ export function CampaignSettingsForm({ campaign, sections: initialSections, upda
                   defaultValue={campaign.secondaryColor ?? "#6366f1"}
                   className="h-9 w-14 rounded border border-gray-300 p-0.5 cursor-pointer"
                 />
-                <span className="text-sm text-gray-500">{campaign.secondaryColor ?? "#6366f1"}</span>
               </div>
             </Field>
           </div>
+          {/* Live gradient preview */}
+          <div
+            className="h-10 rounded-lg w-full"
+            style={{
+              background: `linear-gradient(135deg, ${campaign.primaryColor ?? "#111827"} 0%, ${campaign.secondaryColor ?? "#6366f1"} 100%)`,
+            }}
+          />
+          <p className="text-xs text-gray-400 -mt-2">↑ Hero gradient preview (when no photo is set)</p>
         </div>
       </section>
 

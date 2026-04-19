@@ -27,6 +27,8 @@ export const updateCampaignSchema = z.object({
     .nullable(),
   isPublic: z.boolean().optional(),
   status: z.enum(["draft", "active", "archived"]).optional(),
+  tagline: z.string().max(200).optional().nullable(),
+  logoUrl: z.string().url().optional().nullable().or(z.literal("")),
   venue: z.string().max(200).optional().nullable(),
   ticketUrl: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
   ticketButtonText: z.string().max(80).optional().nullable(),
