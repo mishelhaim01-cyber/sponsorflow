@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum CampaignStatus {
+  draft
+  active
+  archived
+}
+
+enum SponsorshipStatus {
+  draft
+  in_conversation
+  reserved
+  pending_payment
+  confirmed
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id        String     @id // Clerk user ID
+  email     String     @unique
+  name      String?
+  createdAt DateTime   @default(now())
+  campaigns Campaign[]
+}
+
+model Campaign {
+  id     String         @id @default(cuid())
+  userId String
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String
+  // Immutable after first publish — changing it would break shared links
+  slug   String         @unique
+  status CampaignStatus @default(draft)
+
+  // Public visibility toggle — deck is only accessible when true
+  isPublic Boolean @default(false)
+
+  // ── Event details ─────────────────────────────────
+  eventDate DateTime?
+
+  // ── Sponsor-facing deck content ───────────────────
+  organizationOverview String?
+  audienceSummary      String?
+  campaignGoals        String?
+  ctaText              String?
+  ctaEmail             String?
+
+  // ── Visual ────────────────────────────────────────
+  heroImageUrl    String?
+  primaryColor    String? // hex e.g. "#1a1a2e"
+  secondaryColor  String?
+  templateId      String  @default("default")
+
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  tiers     SponsorshipTier[]
+
+  @@index([userId])
+  @@index([slug])
+}
+
+model SponsorshipTier {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  totalSlots  Int
+  description String?
+  benefits    String[] // Postgres text[] — list of benefit strings
+  sortOrder   Int      @default(0)
+
+  createdAt    DateTime       @default(now())
+  sponsorships Sponsorship[]
+
+  @@index([campaignId])
+}
+
+model Sponsorship {
+  id     String          @id @default(cuid())
+  tierId String
+  tier   SponsorshipTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+
+  sponsorName    String
+  sponsorLogoUrl String?
+  status         SponsorshipStatus @default(draft)
+
+  // When false, name/logo are hidden on the public deck
+  isPublic Boolean @default(true)
+
+  // Internal notes — never exposed on public deck
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tierId])
+}

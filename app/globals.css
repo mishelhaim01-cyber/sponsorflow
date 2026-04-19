@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@media print {
+  /* Force background colors and images to render — critical for hero + tier headers */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent tier cards from breaking across pages */
+  .deck-tier-card {
+    break-inside: avoid;
+  }
+
+  /* Slightly tighter spacing in print mode */
+  .deck-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
